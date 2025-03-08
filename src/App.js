@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ChatInterface from './components/ChatInterface';
 import SplashScreen from './components/SplashScreen';
 import './App.css';
@@ -12,8 +12,8 @@ function App() {
 
   return (
     <div className="App">
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
       <ChatInterface />
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     </div>
   );
 }

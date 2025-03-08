@@ -1,0 +1,45 @@
+/* src/components/SplashScreen.css */
+
+.splash-screen-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+  /* Match your chat interface size/padding */
+  width: 100%;
+  max-width: 5xl;
+  margin: 0 auto;
+  pointer-events: none; /* Allow clicking through the splash */
+  animation: splashFadeOut 1s ease-out forwards;
+  animation-delay: 4s; /* Start fading out after 4 seconds */
+}
+
+.splash-screen-content {
+  width: 100%;
+  height: 100vh;
+  max-width: 5xl;
+  border-radius: 0.5rem; /* Match your chat UI border radius */
+  overflow: hidden;
+  background-color: #111827; /* Match your UI background */
+}
+
+.splash-screen-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes splashFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

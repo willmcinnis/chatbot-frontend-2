@@ -7,12 +7,16 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = () => {
+    console.log("Splash screen completed");
     setShowSplash(false);
   };
 
   return (
-    <div className="App">
+    <div className="App relative">
+      {/* The chat interface is always rendered */}
       <ChatInterface />
+      
+      {/* The splash screen is conditionally rendered on top */}
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     </div>
   );

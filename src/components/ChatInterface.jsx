@@ -71,7 +71,7 @@ const ChatInterface = () => {
       <header className="py-3 px-4 mb-4 bg-gray-800 rounded-lg shadow-md flex items-center">
         <div className="w-3 h-3 rounded-full bg-green-500 mr-2 animate-pulse"></div>
         <h1 className="text-xl font-bold tracking-wider bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-          AI Assistant
+          LISA by <img src="https://positivetraincontrolservices.com/wp-content/uploads/2018/03/logo.png"></img>
         </h1>
       </header>
       

@@ -1,30 +1,29 @@
 /* src/components/SplashScreen.css */
 
 .splash-screen-container {
+  /* Match exactly the main container of ChatInterface */
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  max-width: 64rem; /* 5xl in Tailwind */
+  height: calc(100vh - 2rem); /* Account for padding */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1rem;
   z-index: 100;
-  pointer-events: none; /* Allow clicking through the splash */
+  pointer-events: none;
   animation: splashFadeOut 1s ease-out forwards;
-  animation-delay: 4s; /* Start fading out after 4 seconds */
+  animation-delay: 4s;
 }
 
 .splash-screen-content {
-  /* Match the exact dimensions of your chat container */
+  /* Match the content area of the chat (the gray-800 area) */
   width: 100%;
-  max-width: 64rem; /* equals 5xl in Tailwind */
-  height: calc(100vh - 2rem); /* Full height minus padding */
-  margin: 0 auto;
-  padding: 0;
+  height: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
-  /* Match the shadow to make it blend with the chat UI */
+  background-color: #1f2937; /* bg-gray-800 */
+  /* Match shadow from your component */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
@@ -32,9 +31,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Match the rounded corners of your chat interface */
-  border-radius: 0.5rem;
-  background-color: #1f2937; /* bg-gray-800 to match your chat background */
+  display: block;
 }
 
 @keyframes splashFadeOut {
@@ -43,13 +40,5 @@
   }
   to {
     opacity: 0;
-  }
-}
-
-/* Media queries to match responsive behavior */
-@media (max-width: 640px) {
-  .splash-screen-content {
-    height: calc(100vh - 1rem);
-    padding: 0;
   }
 }

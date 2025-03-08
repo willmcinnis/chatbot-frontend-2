@@ -1,35 +1,34 @@
 /* src/components/SplashScreen.css */
 
 .splash-screen-container {
-  /* Position relative to the viewport */
+  /* Position fixed within viewport */
   position: fixed;
   
-  /* Set width to match chat container */
-  width: calc(100% - 2rem);
-  max-width: calc(64rem - 2rem); /* 5xl - padding */
+  /* Width based on chat container */
+  width: calc(100% - 2rem); /* Account for horizontal padding */
+  max-width: calc(64rem - 2rem); /* 5xl (1024px) minus padding */
   
   /* Center horizontally */
   left: 50%;
   transform: translateX(-50%);
   
-  /* Calculate position and size more conservatively */
-  top: calc(4rem + 2rem); /* Header + extra buffer */
+  /* Calculate top position based on header height + padding */
+  top: calc(1rem + 2.5rem + 1rem); /* top padding + header + margin */
   
-  /* Set a more conservative height */
-  height: calc(100vh - 14rem); /* Subtract more for header, form, and safe margins */
+  /* Set height based on the available space for the chat box */
+  height: calc(100vh - 9rem); /* Viewport - (padding + header + form) */
+  
+  /* Match the exact padding of the chat box */
+  padding: 1rem;
   
   z-index: 100;
   pointer-events: none;
-  
-  /* Animation */
   animation: splashFadeOut 1s ease-out forwards;
   animation-delay: 4s;
-  
-  /* Add border for debugging - remove after confirming position */
-  /* border: 2px solid red; */
 }
 
 .splash-screen-content {
+  /* Apply styles to match the chat box exactly */
   width: 100%;
   height: 100%;
   border-radius: 0.5rem;
@@ -51,13 +50,5 @@
   }
   to {
     opacity: 0;
-  }
-}
-
-/* Responsive adjustments */
-@media (max-height: 700px) {
-  .splash-screen-container {
-    height: calc(100vh - 16rem); /* Even more conservative for small screens */
-    top: calc(4.5rem + 2rem);
   }
 }

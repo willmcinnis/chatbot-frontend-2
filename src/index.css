@@ -62,3 +62,37 @@ code {
   background-size: 200% 200%;
   animation: gradient-shift 5s ease infinite;
 }
+
+/* Add to your index.css or App.css */
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.fade-out {
+  animation: fadeOut 1s ease-out forwards;
+}
+
+/* Ensure z-index stacking is correct */
+.chat-container {
+  position: relative;
+  z-index: 10;
+}
+
+.splash-container {
+  position: fixed; 
+  z-index: 40;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Allow clicking through to the UI beneath */
+}

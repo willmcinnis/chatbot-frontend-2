@@ -1,15 +1,21 @@
 /* src/components/SplashScreen.css */
 
 .splash-screen-container {
-  /* Match exactly the main container of ChatInterface */
+  /* Position fixed but within the chat interface's dimensions */
   position: fixed;
-  width: 100%;
-  max-width: 64rem; /* 5xl in Tailwind */
-  height: calc(100vh - 2rem); /* Account for padding */
+  width: calc(100% - 2rem); /* Account for horizontal padding */
+  max-width: calc(64rem - 2rem); /* 5xl in Tailwind minus padding */
+  
+  /* Calculate position to match only the chat box area */
   left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  padding: 1rem;
+  transform: translateX(-50%);
+  
+  /* Position top edge below the header (header height + margins) */
+  top: calc(2.75rem + 1.5rem); /* Header height (py-3 + text-xl) plus mb-4 */
+  
+  /* Height should be just the chat area height (not including header or form) */
+  height: calc(100vh - 11rem); /* Subtract header, margins, and form */
+  
   z-index: 100;
   pointer-events: none;
   animation: splashFadeOut 1s ease-out forwards;
@@ -17,13 +23,12 @@
 }
 
 .splash-screen-content {
-  /* Match the content area of the chat (the gray-800 area) */
+  /* Match the chat box exactly */
   width: 100%;
   height: 100%;
   border-radius: 0.5rem;
   overflow: hidden;
   background-color: #1f2937; /* bg-gray-800 */
-  /* Match shadow from your component */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 

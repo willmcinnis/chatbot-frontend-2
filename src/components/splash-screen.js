@@ -1,14 +1,12 @@
-// src/components/SplashScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
 
 const SplashScreen = ({ onComplete }) => {
-  const [isVideoComplete, setIsVideoComplete] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // When component mounts, create a video element
+    // Create video element
     const videoElement = document.createElement('video');
-    videoElement.src = '/splash-video.mp4'; // Place your video in the public folder
+    videoElement.src = '/Lisa.mp4'; // Use the Lisa.mp4 video
     videoElement.autoplay = true;
     videoElement.muted = true;
     videoElement.style.width = '100%';
@@ -20,17 +18,15 @@ const SplashScreen = ({ onComplete }) => {
     
     // Listen for the end of the video
     videoElement.addEventListener('ended', () => {
-      setIsVideoComplete(true);
+      setIsVisible(false);
       if (onComplete) onComplete();
     });
     
     // Fallback in case video doesn't load or play
     const timeoutId = setTimeout(() => {
-      if (!isVideoComplete) {
-        setIsVideoComplete(true);
-        if (onComplete) onComplete();
-      }
-    }, 5000); // 5 second fallback timeout
+      setIsVisible(false);
+      if (onComplete) onComplete();
+    }, 6000); // 6 second fallback timeout
     
     // Add video to container
     const container = document.getElementById('splash-container');
@@ -47,21 +43,19 @@ const SplashScreen = ({ onComplete }) => {
     };
   }, [onComplete]);
   
+  if (!isVisible) return null;
+  
   return (
-    <View style={styles.container} id="splash-container" />
+    <div 
+      id="splash-container" 
+      className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center"
+    >
+      {/* Optional logo or text overlay */}
+      <div className="absolute z-10 text-white text-4xl font-bold">
+        {/* Any overlay content can go here */}
+      </div>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#000',
-    zIndex: 1000,
-  }
-});
 
 export default SplashScreen;

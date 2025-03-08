@@ -1,44 +1,76 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const SplashScreen = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(true);
-
+  const videoRef = useRef(null);
+  
   useEffect(() => {
-    // Create video element
-    const videoElement = document.createElement('video');
-    videoElement.src = '/Lisa.mp4'; // Use the Lisa.mp4 video
-    videoElement.autoplay = true;
-    videoElement.muted = true;
-    videoElement.style.width = '100%';
-    videoElement.style.height = '100%';
-    videoElement.style.objectFit = 'cover';
-    videoElement.style.position = 'absolute';
-    videoElement.style.top = 0;
-    videoElement.style.left = 0;
+    console.log("SplashScreen mounted");
     
-    // Listen for the end of the video
-    videoElement.addEventListener('ended', () => {
-      setIsVisible(false);
-      if (onComplete) onComplete();
-    });
-    
-    // Fallback in case video doesn't load or play
-    const timeoutId = setTimeout(() => {
-      setIsVisible(false);
-      if (onComplete) onComplete();
-    }, 6000); // 6 second fallback timeout
-    
-    // Add video to container
-    const container = document.getElementById('splash-container');
-    if (container) {
-      container.appendChild(videoElement);
+    const video = videoRef.current;
+    if (!video) {
+      console.error("Video element not found");
+      return;
     }
     
-    // Cleanup function
-    return () => {
-      if (container && container.contains(videoElement)) {
-        container.removeChild(videoElement);
+    // Log video attributes for debugging
+    console.log("Video element:", video);
+    console.log("Video source:", video.src);
+    console.log("Video ready state:", video.readyState);
+    
+    // Handle video load success
+    const handleCanPlay = () => {
+      console.log("Video can play now");
+      // Attempt to play the video
+      const playPromise = video.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log("Video playback started successfully");
+          })
+          .catch(error => {
+            console.error("Video playback failed:", error);
+            // If autoplay fails, just hide the splash screen
+            setTimeout(() => {
+              setIsVisible(false);
+              if (onComplete) onComplete();
+            }, 1000);
+          });
       }
+    };
+    
+    // Handle video end
+    const handleEnded = () => {
+      console.log("Video playback ended");
+      setIsVisible(false);
+      if (onComplete) onComplete();
+    };
+    
+    // Handle video error
+    const handleError = (error) => {
+      console.error("Video error:", error);
+      setIsVisible(false);
+      if (onComplete) onComplete();
+    };
+    
+    // Set up event listeners
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('error', handleError);
+    
+    // Fallback timeout - hide splash screen after 6 seconds regardless
+    const timeoutId = setTimeout(() => {
+      console.log("Fallback timeout triggered");
+      setIsVisible(false);
+      if (onComplete) onComplete();
+    }, 6000);
+    
+    // Cleanup
+    return () => {
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('error', handleError);
       clearTimeout(timeoutId);
     };
   }, [onComplete]);
@@ -47,9 +79,18 @@ const SplashScreen = ({ onComplete }) => {
   
   return (
     <div 
-      id="splash-container" 
       className="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center"
     >
+      <video 
+        ref={videoRef}
+        src="/Lisa.mp4"
+        muted
+        playsInline
+        autoPlay
+        className="w-full h-full object-cover"
+        style={{ position: "absolute", top: 0, left: 0 }}
+      />
+      
       {/* Optional logo or text overlay */}
       <div className="absolute z-10 text-white text-4xl font-bold">
         {/* Any overlay content can go here */}

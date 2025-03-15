@@ -7,29 +7,8 @@ const ChatInterface = () => {
   const [threadId, setThreadId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // GitHub repository details
-  const GITHUB_USER = 'willmcinnis';
-  const GITHUB_REPO = 'chatbot-backend';
-  const GITHUB_BRANCH = 'main';
-
-  // Define your image mappings directly based on your actual repository structure
-  const IMAGE_MAPPINGS = {
-    'event recorder': [
-      {
-        // Path based on your repository structure with corrected spelling
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/train-images/Event-Recorder/Event-Recorder.jpg`,
-        description: 'Event Recorder device used to record train operations data',
-        displayName: 'Event Recorder'
-      }
-    ],
-    'crash hardened': [
-      {
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/train-images/Event-Recorder/Event-Recorder.jpg`, 
-        description: 'Crash Hardened Event Recorder designed to withstand significant impact',
-        displayName: 'Crash Hardened Event Recorder'
-      }
-    ]
-  };
+  // Direct raw URL from GitHub - using the exact file path
+  const EVENT_RECORDER_IMAGE_URL = 'https://raw.githubusercontent.com/willmcinnis/chatbot-backend/main/train-images/Event-Recorder/Event-Recorder.jpg';
 
   // Auto-scroll to bottom when messages update
   useEffect(() => {
@@ -44,67 +23,31 @@ const ChatInterface = () => {
   const handleSpecialCommands = (userInput) => {
     const lowercaseInput = userInput.toLowerCase();
     
-    // Check for image request phrases
-    const isImageRequest = (
-      lowercaseInput.includes('show me') || 
-      lowercaseInput.includes('display') || 
-      lowercaseInput.includes('image of') || 
-      lowercaseInput.includes('picture of') ||
-      lowercaseInput.includes('can i see')
-    );
-    
-    if (!isImageRequest) return false;
-    
-    // Check if the request mentions any of our defined components
-    for (const [component, images] of Object.entries(IMAGE_MAPPINGS)) {
-      if (lowercaseInput.includes(component)) {
-        // Try each image until one works
-        for (const imageData of images) {
-          // Create response with image
-          const assistantMessage = {
-            role: 'assistant',
-            content: imageData.description,
-            isImage: true,
-            image: {
-              url: imageData.url,
-              alt: imageData.displayName,
-              displayName: imageData.displayName,
-              fallbackUrls: images.map(img => img.url) // Include all URLs as fallbacks
-            }
-          };
-          
-          setMessages(prev => [...prev, assistantMessage]);
-          console.log("Showing image for:", component, "URL:", imageData.url);
-          return true;
-        }
-      }
-    }
-    
-    // Special case for any image from the event recorder folder
+    // Check if this is a request for an event recorder image
     if (
       lowercaseInput.includes('event recorder') && 
-      (lowercaseInput.includes('folder') || lowercaseInput.includes('any') || 
-       lowercaseInput.includes('an image') || lowercaseInput.includes('a picture'))
+      (lowercaseInput.includes('show me') || 
+       lowercaseInput.includes('display') || 
+       lowercaseInput.includes('image') || 
+       lowercaseInput.includes('picture') ||
+       lowercaseInput.includes('can i see'))
     ) {
-      // Just show the first available event recorder image
-      const eventRecorderImages = IMAGE_MAPPINGS['event recorder'];
-      if (eventRecorderImages && eventRecorderImages.length > 0) {
-        const assistantMessage = {
-          role: 'assistant',
-          content: 'Here\'s an image of an Event Recorder:',
-          isImage: true,
-          image: {
-            url: eventRecorderImages[0].url,
-            alt: 'Event Recorder',
-            displayName: 'Event Recorder',
-            fallbackUrls: eventRecorderImages.map(img => img.url)
-          }
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        console.log("Showing generic event recorder image");
-        return true;
-      }
+      console.log("Event recorder image requested, using URL:", EVENT_RECORDER_IMAGE_URL);
+      
+      // Create response with image
+      const assistantMessage = {
+        role: 'assistant',
+        content: 'Event Recorder device used to record train operations data',
+        isImage: true,
+        image: {
+          url: EVENT_RECORDER_IMAGE_URL,
+          alt: 'Event Recorder',
+          displayName: 'Event Recorder'
+        }
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+      return true;
     }
     
     return false;
@@ -207,22 +150,6 @@ const ChatInterface = () => {
                       className="w-full h-auto"
                       onError={(e) => {
                         console.error("Image failed to load:", message.image.url);
-                        
-                        // Try fallback URLs if available
-                        if (message.image.fallbackUrls && message.image.fallbackUrls.length > 0) {
-                          const currentUrl = e.target.src;
-                          const currentIndex = message.image.fallbackUrls.indexOf(currentUrl);
-                          
-                          // Try the next URL in the fallback list
-                          if (currentIndex < message.image.fallbackUrls.length - 1) {
-                            const nextUrl = message.image.fallbackUrls[currentIndex + 1];
-                            console.log("Trying fallback URL:", nextUrl);
-                            e.target.src = nextUrl;
-                            return;
-                          }
-                        }
-                        
-                        // If all fallbacks fail or none available, show placeholder
                         e.target.onerror = null;
                         e.target.src = 'https://placehold.co/400x300/333/fff?text=Image+Not+Found';
                       }}

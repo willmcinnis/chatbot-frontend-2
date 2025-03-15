@@ -7,6 +7,11 @@ const ChatInterface = () => {
   const [threadId, setThreadId] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // GitHub repository details
+  const GITHUB_USER = 'willmcinnis'; // Replace with your actual GitHub username
+  const GITHUB_REPO = 'train-images';
+  const GITHUB_BRANCH = 'main';
+
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
@@ -14,6 +19,11 @@ const ChatInterface = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Function to get direct GitHub raw content URL
+  const getGitHubImageUrl = (partName, viewType) => {
+    return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${partName}/${viewType}.jpg`;
   };
 
   const handleSubmit = async (e) => {
@@ -49,20 +59,131 @@ const ChatInterface = () => {
       const data = await response.json();
       setThreadId(data.threadId);
       
+      // Check if response contains train part information
+      if (data.isTrainPart) {
+        // Create an assistant message with train part details
+        const assistantMessage = {
+          role: 'assistant',
+          content: data.message,
+          isTrainPart: true,
+          trainPart: data.trainPart
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        // Regular assistant message
+        const assistantMessage = {
+          role: 'assistant',
+          content: data.message,
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      }
+    } catch (error) {
+      console.error('Detailed error:', error);
+      
+      // Check if the error might be related to a train part query but backend isn't updated
+      // If it contains train terminology, we can handle it on the front-end as a fallback
+      if (isTrainPartQuery(input)) {
+        handleTrainPartQueryFallback(input);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+        }]);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fallback detection for train part queries when backend isn't updated yet
+  const isTrainPartQuery = (query) => {
+    const trainParts = ['engine', 'locomotive', 'wheels', 'cab', 'pantograph', 'coupling', 'caboose'];
+    const queryTerms = ['show', 'display', 'picture', 'image', 'what does', 'can i see'];
+    
+    query = query.toLowerCase();
+    
+    // Check if query contains both a train part and a query term
+    return trainParts.some(part => query.includes(part)) && 
+           queryTerms.some(term => query.includes(term));
+  };
+
+  // Temporary fallback for handling train part queries
+  const handleTrainPartQueryFallback = (query) => {
+    query = query.toLowerCase();
+    
+    // Simple extraction of train part from query
+    const trainParts = {
+      'engine': {
+        name: 'Engine',
+        description: 'The main power unit of the train that provides propulsion.',
+        view: 'front'
+      },
+      'locomotive': {
+        name: 'Locomotive',
+        description: 'Another term for the engine, the power car of the train.',
+        view: 'side'
+      },
+      'wheels': {
+        name: 'Wheels',
+        description: 'Steel wheels that run on the railway tracks.',
+        view: 'standard'
+      },
+      'cab': {
+        name: 'Engineer\'s Cab',
+        description: 'The control center where the engineer operates the train.',
+        view: 'controls'
+      },
+      'pantograph': {
+        name: 'Pantograph',
+        description: 'The device that collects electric current from overhead wires for electric trains.',
+        view: 'extended'
+      },
+      'coupling': {
+        name: 'Coupling',
+        description: 'The mechanism used to connect train cars together.',
+        view: 'standard'
+      },
+      'caboose': {
+        name: 'Caboose',
+        description: 'A car attached to the end of a freight train, primarily used in North America.',
+        view: 'side'
+      }
+    };
+
+    // Find which train part was mentioned
+    let partFound = null;
+    for (const [part, details] of Object.entries(trainParts)) {
+      if (query.includes(part)) {
+        partFound = {
+          partName: part,
+          ...details
+        };
+        break;
+      }
+    }
+
+    if (partFound) {
+      const imageUrl = getGitHubImageUrl(partFound.partName, partFound.view);
+      
       const assistantMessage = {
         role: 'assistant',
-        content: data.message,
+        content: `Here's the ${partFound.name}. ${partFound.description}`,
+        isTrainPart: true,
+        trainPart: {
+          name: partFound.partName,
+          imageUrl: imageUrl,
+          displayName: partFound.name,
+          view: partFound.view
+        }
       };
       
       setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Detailed error:', error);
+    } else {
+      // If we couldn't identify a specific part
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Error: ${error.message}`,
+        content: "I'm not sure which train part you're asking about. Could you specify which part you'd like to see?",
       }]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -96,6 +217,26 @@ const ChatInterface = () => {
                 }`}
               >
                 {message.content}
+                
+                {message.isTrainPart && message.trainPart && (
+                  <div className="mt-3 rounded-md overflow-hidden">
+                    <img
+                      src={message.trainPart.imageUrl}
+                      alt={`${message.trainPart.displayName || message.trainPart.name}`}
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        // If image fails to load, show placeholder or error message
+                        e.target.onerror = null;
+                        e.target.src = 'https://placehold.co/400x300/333/fff?text=Image+Not+Found';
+                      }}
+                    />
+                    <div className="bg-gray-800 text-xs p-2 text-gray-300">
+                      {message.trainPart.displayName || message.trainPart.name}
+                      {message.trainPart.view && message.trainPart.view !== 'default' && 
+                        ` (${message.trainPart.view} view)`}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}

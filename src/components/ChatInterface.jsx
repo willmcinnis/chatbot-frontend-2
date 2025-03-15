@@ -7,11 +7,11 @@ const ChatInterface = () => {
   const [threadId, setThreadId] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // GitHub repository details
-  const GITHUB_USER = 'willmcinnis'; // Replace with your actual GitHub username
-  const GITHUB_REPO = 'train-images';
-  const GITHUB_BRANCH = 'main';
-
+// GitHub repository details
+const GITHUB_USER = 'willmcinnis'; 
+const GITHUB_REPO = 'train-images';
+const GITHUB_BRANCH = 'main';
+  
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();

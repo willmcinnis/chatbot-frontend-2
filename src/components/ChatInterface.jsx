@@ -8,38 +8,25 @@ const ChatInterface = () => {
   const messagesEndRef = useRef(null);
 
   // GitHub repository details
-  const GITHUB_USER = 'willmcinnis'; // Replace with your actual GitHub username
-  const GITHUB_REPO = 'train-images';
+  const GITHUB_USER = 'willmcinnis';
+  const GITHUB_REPO = 'chatbot-backend';
   const GITHUB_BRANCH = 'main';
 
-  // Define your image mappings directly
+  // Define your image mappings directly based on your actual repository structure
   const IMAGE_MAPPINGS = {
     'event recorder': [
       {
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/event-recorder.jpg`,
+        // Path based on your repository structure with corrected spelling
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/train-images/Event-Recorder/Event-Recorder.jpg`,
         description: 'Event Recorder device used to record train operations data',
         displayName: 'Event Recorder'
       }
     ],
     'crash hardened': [
       {
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/crash-hardened.jpg`, 
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/train-images/Event-Recorder/Event-Recorder.jpg`, 
         description: 'Crash Hardened Event Recorder designed to withstand significant impact',
         displayName: 'Crash Hardened Event Recorder'
-      }
-    ],
-    'multirec': [
-      {
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/multirec.jpg`,
-        description: 'MultiRec is a specific event recorder model with multi-channel recording capability',
-        displayName: 'MultiRec Event Recorder'
-      }
-    ],
-    'evac2': [
-      {
-        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/evac2.jpg`,
-        description: 'EVAC2 Event Recorder model with enhanced data storage capabilities',
-        displayName: 'EVAC2 Event Recorder'
       }
     ]
   };
@@ -71,47 +58,51 @@ const ChatInterface = () => {
     // Check if the request mentions any of our defined components
     for (const [component, images] of Object.entries(IMAGE_MAPPINGS)) {
       if (lowercaseInput.includes(component)) {
-        // Create response with image
-        const assistantMessage = {
-          role: 'assistant',
-          content: images[0].description,
-          isImage: true,
-          image: {
-            url: images[0].url,
-            alt: images[0].displayName,
-            displayName: images[0].displayName
-          }
-        };
-        
-        setMessages(prev => [...prev, assistantMessage]);
-        console.log("Showing image for:", component);
-        return true;
+        // Try each image until one works
+        for (const imageData of images) {
+          // Create response with image
+          const assistantMessage = {
+            role: 'assistant',
+            content: imageData.description,
+            isImage: true,
+            image: {
+              url: imageData.url,
+              alt: imageData.displayName,
+              displayName: imageData.displayName,
+              fallbackUrls: images.map(img => img.url) // Include all URLs as fallbacks
+            }
+          };
+          
+          setMessages(prev => [...prev, assistantMessage]);
+          console.log("Showing image for:", component, "URL:", imageData.url);
+          return true;
+        }
       }
     }
     
-    // Special case: generic "event recorder" folder request
+    // Special case for any image from the event recorder folder
     if (
-      lowercaseInput.includes('event recorder folder') || 
-      lowercaseInput.includes('from the event recorder folder') ||
-      (lowercaseInput.includes('event recorder') && 
-       lowercaseInput.includes('folder'))
+      lowercaseInput.includes('event recorder') && 
+      (lowercaseInput.includes('folder') || lowercaseInput.includes('any') || 
+       lowercaseInput.includes('an image') || lowercaseInput.includes('a picture'))
     ) {
-      // Show the first event recorder image
+      // Just show the first available event recorder image
       const eventRecorderImages = IMAGE_MAPPINGS['event recorder'];
       if (eventRecorderImages && eventRecorderImages.length > 0) {
         const assistantMessage = {
           role: 'assistant',
-          content: 'Here\'s an image from the Event Recorder folder:',
+          content: 'Here\'s an image of an Event Recorder:',
           isImage: true,
           image: {
             url: eventRecorderImages[0].url,
             alt: 'Event Recorder',
-            displayName: 'Event Recorder'
+            displayName: 'Event Recorder',
+            fallbackUrls: eventRecorderImages.map(img => img.url)
           }
         };
         
         setMessages(prev => [...prev, assistantMessage]);
-        console.log("Showing image from event recorder folder");
+        console.log("Showing generic event recorder image");
         return true;
       }
     }
@@ -216,6 +207,22 @@ const ChatInterface = () => {
                       className="w-full h-auto"
                       onError={(e) => {
                         console.error("Image failed to load:", message.image.url);
+                        
+                        // Try fallback URLs if available
+                        if (message.image.fallbackUrls && message.image.fallbackUrls.length > 0) {
+                          const currentUrl = e.target.src;
+                          const currentIndex = message.image.fallbackUrls.indexOf(currentUrl);
+                          
+                          // Try the next URL in the fallback list
+                          if (currentIndex < message.image.fallbackUrls.length - 1) {
+                            const nextUrl = message.image.fallbackUrls[currentIndex + 1];
+                            console.log("Trying fallback URL:", nextUrl);
+                            e.target.src = nextUrl;
+                            return;
+                          }
+                        }
+                        
+                        // If all fallbacks fail or none available, show placeholder
                         e.target.onerror = null;
                         e.target.src = 'https://placehold.co/400x300/333/fff?text=Image+Not+Found';
                       }}

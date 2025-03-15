@@ -97,7 +97,7 @@ const GITHUB_BRANCH = 'main';
 
   // Fallback detection for train part queries when backend isn't updated yet
   const isTrainPartQuery = (query) => {
-    const trainParts = ['engine', 'locomotive', 'wheels', 'cab', 'pantograph', 'coupling', 'caboose'];
+    const trainParts = ['engine', 'locomotive', 'wheels', 'cab', 'pantograph', 'coupling', 'caboose', 'event recorder'];
     const queryTerms = ['show', 'display', 'picture', 'image', 'what does', 'can i see'];
     
     query = query.toLowerCase();

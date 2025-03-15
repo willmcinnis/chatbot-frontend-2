@@ -7,11 +7,11 @@ const ChatInterface = () => {
   const [threadId, setThreadId] = useState(null);
   const messagesEndRef = useRef(null);
 
-// GitHub repository details
-const GITHUB_USER = 'willmcinnis'; 
-const GITHUB_REPO = 'train-images';
-const GITHUB_BRANCH = 'main';
-  
+  // GitHub repository details
+  const GITHUB_USER = 'willmcinnis'; // Replace with your actual GitHub username
+  const GITHUB_REPO = 'train-images';
+  const GITHUB_BRANCH = 'main';
+
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
@@ -21,9 +21,16 @@ const GITHUB_BRANCH = 'main';
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Function to get direct GitHub raw content URL
-  const getGitHubImageUrl = (partName, viewType) => {
-    return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${partName}/${viewType}.jpg`;
+  // Function to get direct GitHub folder URL
+  const getGitHubFolderUrl = (partName) => {
+    // Replace spaces in part name with hyphens or underscores for the URL
+    const formattedPartName = partName.replace(/\s+/g, '-');
+    return `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${formattedPartName}?ref=${GITHUB_BRANCH}`;
+  };
+
+  // Function to get direct image URL from GitHub
+  const getGitHubImageUrl = (path) => {
+    return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
   };
 
   const handleSubmit = async (e) => {
@@ -40,6 +47,17 @@ const GITHUB_BRANCH = 'main';
     setIsLoading(true);
 
     try {
+      // Check if this is a request for an image before sending to backend
+      const partRequest = await checkForImageRequest(input);
+      
+      if (partRequest) {
+        // Handle image request locally
+        setMessages(prev => [...prev, partRequest]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // If not an image request, proceed with normal backend call
       const response = await fetch('https://chatbot-backend-kucx.onrender.com/api/chat', {
         method: 'POST',
         headers: {
@@ -59,9 +77,9 @@ const GITHUB_BRANCH = 'main';
       const data = await response.json();
       setThreadId(data.threadId);
       
-      // Check if response contains train part information
+      // Handle response from backend
       if (data.isTrainPart) {
-        // Create an assistant message with train part details
+        // Backend has handled train part
         const assistantMessage = {
           role: 'assistant',
           content: data.message,
@@ -79,111 +97,103 @@ const GITHUB_BRANCH = 'main';
       }
     } catch (error) {
       console.error('Detailed error:', error);
-      
-      // Check if the error might be related to a train part query but backend isn't updated
-      // If it contains train terminology, we can handle it on the front-end as a fallback
-      if (isTrainPartQuery(input)) {
-        handleTrainPartQueryFallback(input);
-      } else {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `Error: ${error.message}`,
-        }]);
-      }
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error: ${error.message}`,
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Fallback detection for train part queries when backend isn't updated yet
-  const isTrainPartQuery = (query) => {
-    const trainParts = ['engine', 'locomotive', 'wheels', 'cab', 'pantograph', 'coupling', 'caboose', 'event recorder'];
-    const queryTerms = ['show', 'display', 'picture', 'image', 'what does', 'can i see'];
+  // Check if message is requesting an image and fetch from GitHub if available
+  const checkForImageRequest = async (query) => {
+    // List of component keywords to detect
+    const componentKeywords = [
+      'event recorder', 'crash hardened', 'multirec', 'evac2', 
+      'engine', 'locomotive', 'wheels', 'cab', 'pantograph', 
+      'coupling', 'caboose'
+    ];
     
-    query = query.toLowerCase();
+    // Action words that indicate the user wants to see an image
+    const actionWords = [
+      'show', 'display', 'see', 'view', 'picture', 'image', 
+      'photo', 'what does', 'how does', 'can i see'
+    ];
     
-    // Check if query contains both a train part and a query term
-    return trainParts.some(part => query.includes(part)) && 
-           queryTerms.some(term => query.includes(term));
-  };
-
-  // Temporary fallback for handling train part queries
-  const handleTrainPartQueryFallback = (query) => {
-    query = query.toLowerCase();
+    const lowerQuery = query.toLowerCase();
     
-    // Simple extraction of train part from query
-    const trainParts = {
-      'engine': {
-        name: 'Engine',
-        description: 'The main power unit of the train that provides propulsion.',
-        view: 'front'
-      },
-      'locomotive': {
-        name: 'Locomotive',
-        description: 'Another term for the engine, the power car of the train.',
-        view: 'side'
-      },
-      'wheels': {
-        name: 'Wheels',
-        description: 'Steel wheels that run on the railway tracks.',
-        view: 'standard'
-      },
-      'cab': {
-        name: 'Engineer\'s Cab',
-        description: 'The control center where the engineer operates the train.',
-        view: 'controls'
-      },
-      'pantograph': {
-        name: 'Pantograph',
-        description: 'The device that collects electric current from overhead wires for electric trains.',
-        view: 'extended'
-      },
-      'coupling': {
-        name: 'Coupling',
-        description: 'The mechanism used to connect train cars together.',
-        view: 'standard'
-      },
-      'caboose': {
-        name: 'Caboose',
-        description: 'A car attached to the end of a freight train, primarily used in North America.',
-        view: 'side'
-      }
-    };
-
-    // Find which train part was mentioned
-    let partFound = null;
-    for (const [part, details] of Object.entries(trainParts)) {
-      if (query.includes(part)) {
-        partFound = {
-          partName: part,
-          ...details
-        };
+    // Check if the query contains action words
+    const hasActionWord = actionWords.some(word => lowerQuery.includes(word));
+    if (!hasActionWord) return null;
+    
+    // Identify which component is being requested
+    let requestedComponent = null;
+    
+    for (const component of componentKeywords) {
+      if (lowerQuery.includes(component)) {
+        requestedComponent = component;
         break;
       }
     }
-
-    if (partFound) {
-      const imageUrl = getGitHubImageUrl(partFound.partName, partFound.view);
+    
+    if (!requestedComponent) return null;
+    
+    try {
+      // Format the component name to match your folder structure
+      const componentFolder = requestedComponent.replace(/\s+/g, '-');
       
-      const assistantMessage = {
+      // Attempt to fetch the contents of the folder to find image files
+      const folderUrl = getGitHubFolderUrl(componentFolder);
+      const response = await fetch(folderUrl);
+      
+      if (!response.ok) {
+        console.warn(`Failed to fetch folder contents for ${componentFolder}`);
+        return null;
+      }
+      
+      const contents = await response.json();
+      
+      // Filter for image files
+      const imageFiles = contents.filter(item => 
+        item.type === 'file' && 
+        /\.(jpg|jpeg|png|gif)$/i.test(item.name)
+      );
+      
+      if (imageFiles.length === 0) {
+        console.warn(`No image files found in ${componentFolder}`);
+        return null;
+      }
+      
+      // Use the first image found (you could enhance this to pick a specific one)
+      const imageFile = imageFiles[0];
+      const imageUrl = getGitHubImageUrl(imageFile.path);
+      
+      // Prepare a descriptive message based on the component
+      let description = `Here's an image of the ${requestedComponent}.`;
+      
+      // Add more specific descriptions for known components
+      if (requestedComponent === 'event recorder') {
+        description = 'Here\'s an image of the Event Recorder. Event Recorders are devices that record train operations data, similar to an airplane\'s "black box."';
+      } else if (requestedComponent === 'crash hardened') {
+        description = 'Here\'s an image of the Crash Hardened Event Recorder. These devices are designed to withstand significant impact and are used to record critical train operational data.';
+      }
+      
+      // Create the assistant message with the image
+      return {
         role: 'assistant',
-        content: `Here's the ${partFound.name}. ${partFound.description}`,
+        content: description,
         isTrainPart: true,
         trainPart: {
-          name: partFound.partName,
+          name: requestedComponent,
+          displayName: requestedComponent.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
           imageUrl: imageUrl,
-          displayName: partFound.name,
-          view: partFound.view
+          fileName: imageFile.name
         }
       };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-    } else {
-      // If we couldn't identify a specific part
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: "I'm not sure which train part you're asking about. Could you specify which part you'd like to see?",
-      }]);
+    } catch (error) {
+      console.error('Error checking for image request:', error);
+      return null;
     }
   };
 
@@ -222,7 +232,7 @@ const GITHUB_BRANCH = 'main';
                   <div className="mt-3 rounded-md overflow-hidden">
                     <img
                       src={message.trainPart.imageUrl}
-                      alt={`${message.trainPart.displayName || message.trainPart.name}`}
+                      alt={`${message.trainPart.displayName}`}
                       className="w-full h-auto"
                       onError={(e) => {
                         // If image fails to load, show placeholder or error message
@@ -231,9 +241,7 @@ const GITHUB_BRANCH = 'main';
                       }}
                     />
                     <div className="bg-gray-800 text-xs p-2 text-gray-300">
-                      {message.trainPart.displayName || message.trainPart.name}
-                      {message.trainPart.view && message.trainPart.view !== 'default' && 
-                        ` (${message.trainPart.view} view)`}
+                      {message.trainPart.fileName ? message.trainPart.fileName : message.trainPart.displayName}
                     </div>
                   </div>
                 )}

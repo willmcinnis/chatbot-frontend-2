@@ -12,6 +12,38 @@ const ChatInterface = () => {
   const GITHUB_REPO = 'train-images';
   const GITHUB_BRANCH = 'main';
 
+  // Define your image mappings directly
+  const IMAGE_MAPPINGS = {
+    'event recorder': [
+      {
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/event-recorder.jpg`,
+        description: 'Event Recorder device used to record train operations data',
+        displayName: 'Event Recorder'
+      }
+    ],
+    'crash hardened': [
+      {
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/crash-hardened.jpg`, 
+        description: 'Crash Hardened Event Recorder designed to withstand significant impact',
+        displayName: 'Crash Hardened Event Recorder'
+      }
+    ],
+    'multirec': [
+      {
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/multirec.jpg`,
+        description: 'MultiRec is a specific event recorder model with multi-channel recording capability',
+        displayName: 'MultiRec Event Recorder'
+      }
+    ],
+    'evac2': [
+      {
+        url: `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/Event-Recorder/evac2.jpg`,
+        description: 'EVAC2 Event Recorder model with enhanced data storage capabilities',
+        displayName: 'EVAC2 Event Recorder'
+      }
+    ]
+  };
+
   // Auto-scroll to bottom when messages update
   useEffect(() => {
     scrollToBottom();
@@ -21,16 +53,70 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Function to get direct GitHub folder URL
-  const getGitHubFolderUrl = (partName) => {
-    // Replace spaces in part name with hyphens or underscores for the URL
-    const formattedPartName = partName.replace(/\s+/g, '-');
-    return `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${formattedPartName}?ref=${GITHUB_BRANCH}`;
-  };
-
-  // Function to get direct image URL from GitHub
-  const getGitHubImageUrl = (path) => {
-    return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${path}`;
+  // Handle special commands - intercept image requests before sending to backend
+  const handleSpecialCommands = (userInput) => {
+    const lowercaseInput = userInput.toLowerCase();
+    
+    // Check for image request phrases
+    const isImageRequest = (
+      lowercaseInput.includes('show me') || 
+      lowercaseInput.includes('display') || 
+      lowercaseInput.includes('image of') || 
+      lowercaseInput.includes('picture of') ||
+      lowercaseInput.includes('can i see')
+    );
+    
+    if (!isImageRequest) return false;
+    
+    // Check if the request mentions any of our defined components
+    for (const [component, images] of Object.entries(IMAGE_MAPPINGS)) {
+      if (lowercaseInput.includes(component)) {
+        // Create response with image
+        const assistantMessage = {
+          role: 'assistant',
+          content: images[0].description,
+          isImage: true,
+          image: {
+            url: images[0].url,
+            alt: images[0].displayName,
+            displayName: images[0].displayName
+          }
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        console.log("Showing image for:", component);
+        return true;
+      }
+    }
+    
+    // Special case: generic "event recorder" folder request
+    if (
+      lowercaseInput.includes('event recorder folder') || 
+      lowercaseInput.includes('from the event recorder folder') ||
+      (lowercaseInput.includes('event recorder') && 
+       lowercaseInput.includes('folder'))
+    ) {
+      // Show the first event recorder image
+      const eventRecorderImages = IMAGE_MAPPINGS['event recorder'];
+      if (eventRecorderImages && eventRecorderImages.length > 0) {
+        const assistantMessage = {
+          role: 'assistant',
+          content: 'Here\'s an image from the Event Recorder folder:',
+          isImage: true,
+          image: {
+            url: eventRecorderImages[0].url,
+            alt: 'Event Recorder',
+            displayName: 'Event Recorder'
+          }
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        console.log("Showing image from event recorder folder");
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   const handleSubmit = async (e) => {
@@ -46,18 +132,15 @@ const ChatInterface = () => {
     setInput('');
     setIsLoading(true);
 
+    // Check for special commands before sending to backend
+    const isSpecialCommand = handleSpecialCommands(input);
+    
+    if (isSpecialCommand) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Check if this is a request for an image before sending to backend
-      const partRequest = await checkForImageRequest(input);
-      
-      if (partRequest) {
-        // Handle image request locally
-        setMessages(prev => [...prev, partRequest]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // If not an image request, proceed with normal backend call
       const response = await fetch('https://chatbot-backend-kucx.onrender.com/api/chat', {
         method: 'POST',
         headers: {
@@ -77,24 +160,12 @@ const ChatInterface = () => {
       const data = await response.json();
       setThreadId(data.threadId);
       
-      // Handle response from backend
-      if (data.isTrainPart) {
-        // Backend has handled train part
-        const assistantMessage = {
-          role: 'assistant',
-          content: data.message,
-          isTrainPart: true,
-          trainPart: data.trainPart
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      } else {
-        // Regular assistant message
-        const assistantMessage = {
-          role: 'assistant',
-          content: data.message,
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-      }
+      const assistantMessage = {
+        role: 'assistant',
+        content: data.message,
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Detailed error:', error);
       setMessages(prev => [...prev, {
@@ -103,97 +174,6 @@ const ChatInterface = () => {
       }]);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Check if message is requesting an image and fetch from GitHub if available
-  const checkForImageRequest = async (query) => {
-    // List of component keywords to detect
-    const componentKeywords = [
-      'event recorder', 'crash hardened', 'multirec', 'evac2', 
-      'engine', 'locomotive', 'wheels', 'cab', 'pantograph', 
-      'coupling', 'caboose'
-    ];
-    
-    // Action words that indicate the user wants to see an image
-    const actionWords = [
-      'show', 'display', 'see', 'view', 'picture', 'image', 
-      'photo', 'what does', 'how does', 'can i see'
-    ];
-    
-    const lowerQuery = query.toLowerCase();
-    
-    // Check if the query contains action words
-    const hasActionWord = actionWords.some(word => lowerQuery.includes(word));
-    if (!hasActionWord) return null;
-    
-    // Identify which component is being requested
-    let requestedComponent = null;
-    
-    for (const component of componentKeywords) {
-      if (lowerQuery.includes(component)) {
-        requestedComponent = component;
-        break;
-      }
-    }
-    
-    if (!requestedComponent) return null;
-    
-    try {
-      // Format the component name to match your folder structure
-      const componentFolder = requestedComponent.replace(/\s+/g, '-');
-      
-      // Attempt to fetch the contents of the folder to find image files
-      const folderUrl = getGitHubFolderUrl(componentFolder);
-      const response = await fetch(folderUrl);
-      
-      if (!response.ok) {
-        console.warn(`Failed to fetch folder contents for ${componentFolder}`);
-        return null;
-      }
-      
-      const contents = await response.json();
-      
-      // Filter for image files
-      const imageFiles = contents.filter(item => 
-        item.type === 'file' && 
-        /\.(jpg|jpeg|png|gif)$/i.test(item.name)
-      );
-      
-      if (imageFiles.length === 0) {
-        console.warn(`No image files found in ${componentFolder}`);
-        return null;
-      }
-      
-      // Use the first image found (you could enhance this to pick a specific one)
-      const imageFile = imageFiles[0];
-      const imageUrl = getGitHubImageUrl(imageFile.path);
-      
-      // Prepare a descriptive message based on the component
-      let description = `Here's an image of the ${requestedComponent}.`;
-      
-      // Add more specific descriptions for known components
-      if (requestedComponent === 'event recorder') {
-        description = 'Here\'s an image of the Event Recorder. Event Recorders are devices that record train operations data, similar to an airplane\'s "black box."';
-      } else if (requestedComponent === 'crash hardened') {
-        description = 'Here\'s an image of the Crash Hardened Event Recorder. These devices are designed to withstand significant impact and are used to record critical train operational data.';
-      }
-      
-      // Create the assistant message with the image
-      return {
-        role: 'assistant',
-        content: description,
-        isTrainPart: true,
-        trainPart: {
-          name: requestedComponent,
-          displayName: requestedComponent.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-          imageUrl: imageUrl,
-          fileName: imageFile.name
-        }
-      };
-    } catch (error) {
-      console.error('Error checking for image request:', error);
-      return null;
     }
   };
 
@@ -228,20 +208,20 @@ const ChatInterface = () => {
               >
                 {message.content}
                 
-                {message.isTrainPart && message.trainPart && (
+                {message.isImage && message.image && (
                   <div className="mt-3 rounded-md overflow-hidden">
                     <img
-                      src={message.trainPart.imageUrl}
-                      alt={`${message.trainPart.displayName}`}
+                      src={message.image.url}
+                      alt={message.image.alt}
                       className="w-full h-auto"
                       onError={(e) => {
-                        // If image fails to load, show placeholder or error message
+                        console.error("Image failed to load:", message.image.url);
                         e.target.onerror = null;
                         e.target.src = 'https://placehold.co/400x300/333/fff?text=Image+Not+Found';
                       }}
                     />
                     <div className="bg-gray-800 text-xs p-2 text-gray-300">
-                      {message.trainPart.fileName ? message.trainPart.fileName : message.trainPart.displayName}
+                      {message.image.displayName}
                     </div>
                   </div>
                 )}

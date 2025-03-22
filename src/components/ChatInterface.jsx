@@ -85,28 +85,33 @@ const ChatInterface = () => {
         </div>
         
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col p-4 overflow-hidden">
-          <div className="flex-grow overflow-auto p-4 mb-4 border rounded-lg">
-            <div className="space-y-4">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-grow overflow-auto">
+            <div>
+              {messages.length === 0 && (
+                <div className="py-10 px-4 text-center text-gray-400">
+                  <p>How can I help you today?</p>
+                </div>
+              )}
+              
               {messages.map((message, index) => (
                 <div
                   key={index}
-                  className={message.role === 'user' ? 'text-right' : 'text-left'}
+                  className={`py-6 px-4 text-black ${
+                    message.role === 'user' 
+                      ? 'bg-white' 
+                      : 'bg-gray-50'
+                  }`}
                 >
-                  <div
-                    className={`inline-block p-3 rounded-lg ${
-                      message.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-200'
-                    }`}
-                  >
+                  <div className="container mx-auto max-w-3xl">
                     {message.content}
                   </div>
                 </div>
               ))}
+              
               {isLoading && (
-                <div className="text-left">
-                  <div className="inline-block p-3 rounded-lg bg-gray-200">
+                <div className="py-6 px-4 bg-gray-50 text-black">
+                  <div className="container mx-auto max-w-3xl">
                     <div className="flex space-x-2">
                       <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
                       <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -118,25 +123,29 @@ const ChatInterface = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-grow p-2 border rounded-lg"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              className={`px-4 py-2 bg-blue-500 text-white rounded-lg ${
-                isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
-              }`}
-              disabled={isLoading}
-            >
-              Send
-            </button>
-          </form>
+          <div className="border-t p-4">
+            <div className="container mx-auto max-w-3xl">
+              <form onSubmit={handleSubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Type your message..."
+                  className="flex-grow p-3 border rounded-lg text-black"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  className={`px-4 py-2 bg-blue-500 text-white rounded-lg ${
+                    isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'
+                  }`}
+                  disabled={isLoading}
+                >
+                  Send
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
         
         {/* Right Sidebar */}

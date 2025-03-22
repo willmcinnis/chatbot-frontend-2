@@ -5,6 +5,7 @@ const ChatInterface = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [threadId, setThreadId] = useState(null);
+  const [imagePopup, setImagePopup] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,6 +57,49 @@ const ChatInterface = () => {
     }
   };
 
+  // Function to render message content with clickable images
+  const renderMessageContent = (content) => {
+    // Check if content contains an image reference 
+    // This is a simple regex check - you might need to adjust based on your actual image format
+    const imgRegex = /<img[^>]+src="([^">]+)"/g;
+    let match;
+    let lastIndex = 0;
+    const parts = [];
+    
+    // Find all image tags in the content
+    while ((match = imgRegex.exec(content)) !== null) {
+      // Add the text before the image
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index));
+      }
+      
+      // Extract the src from the image tag
+      const imgSrc = match[1];
+      
+      // Add a clickable image
+      parts.push(
+        <img 
+          key={match.index}
+          src={imgSrc} 
+          alt="Chat content"
+          className="max-w-full my-2 cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={() => setImagePopup(imgSrc)}
+          style={{ maxHeight: '300px' }}
+        />
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add any remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+    
+    // If no images were found, just return the original content
+    return parts.length > 0 ? parts : content;
+  };
+
   return (
     <div className="flex flex-col w-full h-screen">
       {/* Header with Logo */}
@@ -104,7 +148,7 @@ const ChatInterface = () => {
                   }`}
                 >
                   <div className="container mx-auto max-w-3xl">
-                    {message.content}
+                    {renderMessageContent(message.content)}
                   </div>
                 </div>
               ))}
@@ -159,6 +203,28 @@ const ChatInterface = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Popup */}
+      {imagePopup && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setImagePopup(null)}
+        >
+          <div className="max-w-4xl max-h-screen relative">
+            <button 
+              className="absolute top-4 right-4 bg-white rounded-full w-10 h-10 flex items-center justify-center text-black font-bold"
+              onClick={() => setImagePopup(null)}
+            >
+              ×
+            </button>
+            <img 
+              src={imagePopup} 
+              alt="Enlarged view" 
+              className="max-w-full max-h-screen object-contain" 
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

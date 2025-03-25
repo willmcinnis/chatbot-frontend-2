@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import TableFormatter from './TableFormatter';
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState([]);
@@ -57,10 +58,14 @@ const ChatInterface = () => {
     }
   };
 
-  // Function to render message content with clickable images
+  // Function to render message content with clickable images and formatted tables
   const renderMessageContent = (content) => {
-    // Check if content contains an image reference 
-    // This is a simple regex check - you might need to adjust based on your actual image format
+    // Check if the content might contain markdown tables
+    if (content.includes('|') && content.includes('\n')) {
+      return <TableFormatter content={content} />;
+    }
+    
+    // Otherwise, use the existing image rendering
     const imgRegex = /<img[^>]+src="([^">]+)"/g;
     let match;
     let lastIndex = 0;

@@ -46,9 +46,10 @@ const ChatInterface = () => {
         const imageUrl = data.trainPart.imageUrl;
         
         // Create message with train part information
+        // Remove description from the displayed message
         const assistantMessage = {
           role: 'assistant',
-          content: data.message,
+          content: `Here's the ${data.trainPart.displayName}`, // Remove description
           trainPart: data.trainPart
         };
         

@@ -109,13 +109,26 @@ const ChatInterface = () => {
                 
                 {/* If the message has a train part with an image, display it */}
                 {message.trainPart && message.trainPart.imageUrl && (
-                  <div className="mt-2">
-                    <img 
-                      src={message.trainPart.imageUrl} 
-                      alt={message.trainPart.name}
-                      className="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => handleImageClick(message.trainPart.imageUrl, message.trainPart.name)}
-                    />
+                  <div className="mt-2 border rounded-lg overflow-hidden bg-white">
+                    <div className="p-2 bg-gray-100 border-b">
+                      <h3 className="font-medium text-gray-800">
+                        {message.trainPart.displayName || message.trainPart.name}
+                      </h3>
+                    </div>
+                    <div className="relative">
+                      <img 
+                        src={message.trainPart.imageUrl} 
+                        alt={message.trainPart.displayName || message.trainPart.name}
+                        className="max-w-full w-full cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => handleImageClick(
+                          message.trainPart.imageUrl, 
+                          message.trainPart.displayName || message.trainPart.name
+                        )}
+                      />
+                      <div className="absolute bottom-2 right-2 bg-blue-500 text-white p-1 rounded-lg text-xs">
+                        Click to enlarge
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

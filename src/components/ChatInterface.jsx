@@ -192,7 +192,6 @@ const ChatInterface = () => {
               />
             </div>
           </div>
-          </div>
           
           <div className="flex-grow overflow-auto">
             <div>

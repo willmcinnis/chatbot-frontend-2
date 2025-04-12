@@ -176,9 +176,9 @@ const ChatInterface = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Logo - Enlarged and positioned at the top of the main chat area */}
-          <div className="py-4 flex justify-center border-b">
-            <div className="h-16 relative">
+          {/* Logo - Enlarged 3x and positioned at the top of the main chat area */}
+          <div className="py-6 flex justify-center border-b">
+            <div className="h-48 relative">
               <img 
                 src="/Lisa Logo.png" 
                 alt="Lisa Logo" 

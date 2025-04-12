@@ -176,19 +176,22 @@ const ChatInterface = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Logo - Optimized size while maintaining prominence */}
-          <div className="py-2 flex justify-center border-b">
-            <div className="h-24 relative">
+          {/* Logo with completely removed background */}
+          <div className="py-2 flex justify-center" style={{ backgroundColor: 'transparent', borderBottom: '1px solid #e5e7eb' }}>
+            <div className="h-24 relative" style={{ backgroundColor: 'transparent' }}>
               <img 
                 src="/Lisa Logo.png" 
                 alt="Lisa Logo" 
                 className="object-contain h-full"
                 style={{ 
-                  imageRendering: 'auto',
-                  backgroundColor: 'transparent' 
+                  backgroundImage: 'none',
+                  backgroundColor: 'transparent',
+                  backgroundClip: 'padding-box',
+                  imageRendering: 'auto'
                 }}
               />
             </div>
+          </div>
           </div>
           
           <div className="flex-grow overflow-auto">

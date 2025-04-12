@@ -161,19 +161,6 @@ const ChatInterface = () => {
 
   return (
     <div className="flex flex-col w-full h-screen">
-      {/* Header with Logo */}
-      <div className="w-full bg-white border-b p-3">
-        <div className="container mx-auto flex items-center">
-          <div className="h-10 w-32 relative">
-            <img 
-              src="/Lisa Logo.png" 
-              alt="Lisa Logo" 
-              className="object-contain h-full w-full"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Main Content Area with Sidebars */}
       <div className="flex flex-1 w-full overflow-hidden">
         {/* Left Sidebar */}
@@ -189,6 +176,17 @@ const ChatInterface = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Logo - Enlarged and positioned at the top of the main chat area */}
+          <div className="py-4 flex justify-center border-b">
+            <div className="h-16 relative">
+              <img 
+                src="/Lisa Logo.png" 
+                alt="Lisa Logo" 
+                className="object-contain h-full"
+              />
+            </div>
+          </div>
+          
           <div className="flex-grow overflow-auto">
             <div>
               {messages.length === 0 && (

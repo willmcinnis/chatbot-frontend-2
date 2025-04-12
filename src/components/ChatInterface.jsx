@@ -183,6 +183,10 @@ const ChatInterface = () => {
                 src="/Lisa Logo.png" 
                 alt="Lisa Logo" 
                 className="object-contain h-full"
+                style={{ 
+                  imageRendering: 'auto',
+                  backgroundColor: 'transparent' 
+                }}
               />
             </div>
           </div>

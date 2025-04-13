@@ -176,8 +176,8 @@ const ChatInterface = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-         {/* Logo with matching background color */}
-          <div className="py-2 flex justify-center bg-gray-50" style={{ borderBottom: '1px solid #e5e7eb' }}>
+        {/* Logo with gray background and no separator line */}
+          <div className="py-2 flex justify-center bg-gray-50">
             <div className="h-24 relative bg-gray-50">
               <img 
                 src="/Lisa Logo.png" 

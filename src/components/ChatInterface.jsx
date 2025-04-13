@@ -159,8 +159,8 @@ const ChatInterface = () => {
     return parts.length > 0 ? parts : content;
   };
 
-  // Get the exact same gray color as used in the assistant messages
-  const assistantGrayClass = "bg-gray-50";
+  // Change from "bg-gray-50" to "bg-gray-100" to match darker gray 
+  const chatBackgroundClass = "bg-gray-100";
 
   return (
     <div className="flex flex-col w-full h-screen">
@@ -179,9 +179,9 @@ const ChatInterface = () => {
 
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Logo area explicitly matched to assistant message background */}
-          <div className={`py-2 flex justify-center ${assistantGrayClass}`}>
-            <div className={`h-24 relative ${assistantGrayClass}`}>
+          {/* Logo area with darker gray background */}
+          <div className={`py-2 flex justify-center ${chatBackgroundClass}`}>
+            <div className={`h-24 relative ${chatBackgroundClass}`}>
               <img 
                 src="/Lisa Logo.png" 
                 alt="Lisa Logo" 
